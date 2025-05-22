@@ -1,35 +1,65 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from 'react';
+import styles from './App.module.css';
 
-function App() {
-  const [count, setCount] = useState(0)
+const initialState = {
+	email: '',
+	password: '',
+	passcheck: '',
+};
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+const useStore = () => {
+	const [state, setState] = useState(initialState);
 
-export default App
+	return {
+		getState: () => state,
+		updateState: (fieldName, newValue) => {
+			setState({ ...state, [fieldName]: newValue });
+		},
+	};
+};
+
+const sendData = (formData) => {
+	console.log(formData);
+};
+
+export const App = () => {
+	const { getState, updateState } = useStore();
+
+	const onSubmit = (event) => {
+		event.preventDefault();
+		sendData(getState());
+	};
+
+	const { email, password, passcheck } = useStore();
+
+	return (
+		<div className={styles.app}>
+			<form onSubmit={onSubmit}>
+				<input
+					type="email"
+					name="email"
+					value={email}
+					placeholder="Введите вашу почту"
+					onChange={({ target }) => updateState('email', target.value)}
+				/>
+				<input
+					type="password"
+					name="password"
+					value={password}
+					placeholder="Введите пароль"
+					onChange={({ target }) => updateState('password', target.value)}
+				/>
+				<input
+					type="password"
+					name="passcheck"
+					value={passcheck}
+					placeholder="Повторите пароль"
+					onChange={({ target }) => updateState('passcheck', target.value)}
+				/>
+				<button type="submit">Зарегестрироваться</button>
+			</form>
+		</div>
+	);
+};
+
+export default App;
