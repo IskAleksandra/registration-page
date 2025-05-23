@@ -1,6 +1,13 @@
 .app {
 	text-align: center;
+	display: flex;
+	flex-direction: column;
+	height: 100%;
 }
 .errorLabel {
 	color: red;
+}
+.form {
+	display: flex;
+	flex-direction: column;
 }
