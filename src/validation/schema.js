@@ -16,10 +16,6 @@ export const PasswordValidationSchema = yup
 	)
 	.max(10, 'Пароль не может содержать больше чем 10 символов.');
 
-// const passcheckValidationSchema = yup
-// 	.string()
-// 	.oneOf([yup.ref('password'), null], 'Пароли не совпадают.');
-
-// const passwordBluerSchema = yup
-// 	.string()
-// 	.min(3, 'Пароль не может содержать меньше 3 символов');
+export const PasswordBluerSchema = yup
+	.string()
+	.min(3, 'Пароль не может содержать меньше 3 символов');

@@ -1,6 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import styles from './App.module.css';
-import { EmailValidationSchema, PasswordValidationSchema } from './validation/schema';
+import {
+	EmailValidationSchema,
+	PasswordValidationSchema,
+	PasswordBluerSchema,
+} from './validation/schema';
 import useStore from './hooks/store';
 import validateAndGetErrorMessage from './validation/validate';
 
@@ -16,11 +20,12 @@ export const App = () => {
 	const [isFormValid, setIsFormValid] = useState(false);
 
 	const { email, password, passcheck } = getState();
+	const buttonRef = useRef(null);
 
 	useEffect(() => {
 		const validateForm = () => {
 			const emailErr = validateAndGetErrorMessage(EmailValidationSchema, email);
-			const passwordErr = validateAndGetErrorMessage(
+			let passwordErr = validateAndGetErrorMessage(
 				PasswordValidationSchema,
 				password,
 			);
@@ -28,24 +33,33 @@ export const App = () => {
 			setEmailError(emailErr);
 			setPasswordError(passwordErr);
 
-			setIsFormValid(!emailErr && !passwordErr);
+			let passcheckErr = null;
+			let passcheckValid = false;
+			if (password && passcheck) {
+				if (password !== passcheck) {
+					passcheckErr = 'Пароли не совпадают.';
+				} else {
+					passcheckValid = true;
+				}
+			}
+			setPasscheckError(passcheckErr);
+			setIsFormValid(!emailErr && !passwordErr && passcheckValid);
 		};
 		validateForm();
 	}, [email, password, passcheck]);
 
+	useEffect(() => {
+		const focusSubmitButton = () => {
+			if (isFormValid) {
+				buttonRef.current.focus();
+			}
+		};
+		focusSubmitButton();
+	}, [isFormValid]);
 	const onSubmit = (event) => {
 		event.preventDefault();
-		let passcheckErr = null;
-		if (password && passcheck) {
-			if (password !== passcheck) {
-				passcheckErr = 'Пароли не совпадают.';
-			}
-		}
 
-		setPasscheckError(passcheckErr);
-		setIsFormValid(!passcheckErr);
-
-		if (!passcheckErr) {
+		if (isFormValid) {
 			sendData(getState());
 		}
 	};
@@ -75,6 +89,13 @@ export const App = () => {
 					onChange={({ target }) => {
 						updateState('password', target.value);
 					}}
+					onBlur={({ target }) => {
+						const newError = validateAndGetErrorMessage(
+							PasswordBluerSchema,
+							target.value,
+						);
+						setPasswordError(newError);
+					}}
 				/>
 				{passcheckError && (
 					<div className={styles.errorLabel}>{passcheckError}</div>
@@ -86,7 +107,7 @@ export const App = () => {
 					placeholder="Повторите пароль"
 					onChange={({ target }) => updateState('passcheck', target.value)}
 				/>
-				<button type="submit" disabled={!isFormValid}>
+				<button type="submit" disabled={!isFormValid} ref={buttonRef}>
 					Зарегестрироваться
 				</button>
 			</form>
