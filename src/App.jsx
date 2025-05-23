@@ -1,57 +1,8 @@
 import { useEffect, useState } from 'react';
 import styles from './App.module.css';
-import * as yup from 'yup';
-
-const EmailValidationSchema = yup
-	.string()
-	.matches(
-		/^[\w@.]*$/,
-		'Email введен не верно, используйте только буквы, цифры и нижнее подчеркивание',
-	)
-	.max(20, 'Email должен содержать не больше 20 символов.');
-
-const passwordValidationSchema = yup
-	.string()
-	.matches(
-		/^[\w@.]*$/,
-		'Пароль введен не верно.Доступные символы- буквы, цифры,точка, @.',
-	)
-	.max(10, 'Пароль не может содержать больше чем 10 символов.');
-
-// const passcheckValidationSchema = yup
-// 	.string()
-// 	.oneOf([yup.ref('password'), null], 'Пароли не совпадают.');
-
-// const passwordBluerSchema = yup
-// 	.string()
-// 	.min(3, 'Пароль не может содержать меньше 3 символов');
-
-const validateAndGetErrorMessage = (schema, value) => {
-	let errorMessage = null;
-	try {
-		schema.validateSync(value, { abortEarly: false });
-	} catch ({ errors }) {
-		errorMessage = errors[0];
-	}
-	return errorMessage;
-};
-
-const initialState = {
-	email: '',
-	password: '',
-	passcheck: '',
-};
-
-const useStore = () => {
-	const [state, setState] = useState(initialState);
-
-	return {
-		getState: () => state,
-		updateState: (fieldName, newValue) => {
-			setState({ ...state, [fieldName]: newValue });
-		},
-	};
-};
+import { EmailValidationSchema, PasswordValidationSchema } from './validation/schema';
+import useStore from './hooks/store';
+import validateAndGetErrorMessage from './validation/validate';
 
 const sendData = (formData) => {
 	console.log(formData);
@@ -70,7 +21,7 @@ export const App = () => {
 		const validateForm = () => {
 			const emailErr = validateAndGetErrorMessage(EmailValidationSchema, email);
 			const passwordErr = validateAndGetErrorMessage(
-				passwordValidationSchema,
+				PasswordValidationSchema,
 				password,
 			);
 
