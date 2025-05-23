@@ -1,82 +1,56 @@
-import { useEffect, useState, useRef } from 'react';
+import { useRef, useEffect } from 'react';
+
 import styles from './App.module.css';
-import {
-	EmailValidationSchema,
-	PasswordValidationSchema,
-	PasswordBluerSchema,
-} from './validation/schema';
-import useStore from './hooks/store';
-import validateAndGetErrorMessage from './validation/validate';
+import { formValidationSchema } from './validation/schema';
+import { useForm } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
 
 const sendData = (formData) => {
 	console.log(formData);
 };
 
 export const App = () => {
-	const { getState, updateState } = useStore();
-	const [emailError, setEmailError] = useState(null);
-	const [passwordError, setPasswordError] = useState(null);
-	const [passcheckError, setPasscheckError] = useState(null);
-	const [isFormValid, setIsFormValid] = useState(false);
-
-	const { email, password, passcheck } = getState();
 	const buttonRef = useRef(null);
 
-	useEffect(() => {
-		const validateForm = () => {
-			const emailErr = validateAndGetErrorMessage(EmailValidationSchema, email);
-			let passwordErr = validateAndGetErrorMessage(
-				PasswordValidationSchema,
-				password,
-			);
+	const {
+		register,
+		trigger,
+		handleSubmit,
+		formState: { errors, isValid },
+	} = useForm({
+		defaultValues: {
+			email: '',
+			password: '',
+			passcheck: '',
+		},
+		resolver: yupResolver(formValidationSchema),
+		mode: 'onSubmit',
+	});
 
-			setEmailError(emailErr);
-			setPasswordError(passwordErr);
-
-			let passcheckErr = null;
-			let passcheckValid = false;
-			if (password && passcheck) {
-				if (password !== passcheck) {
-					passcheckErr = 'Пароли не совпадают.';
-				} else {
-					passcheckValid = true;
-				}
-			}
-			setPasscheckError(passcheckErr);
-			setIsFormValid(!emailErr && !passwordErr && passcheckValid);
-		};
-		validateForm();
-	}, [email, password, passcheck]);
+	const emailError = errors.email?.message;
+	const passwordError = errors.password?.message;
+	const passcheckError = errors.passcheck?.message;
 
 	useEffect(() => {
 		const focusSubmitButton = () => {
-			if (isFormValid) {
+			if (isValid) {
 				buttonRef.current.focus();
 			}
 		};
 		focusSubmitButton();
-	}, [isFormValid]);
-	const onSubmit = (event) => {
-		event.preventDefault();
-
-		if (isFormValid) {
-			sendData(getState());
-		}
-	};
+	}, [isValid]);
 
 	return (
 		<div className={styles.app}>
-			<form className={styles.form} onSubmit={onSubmit}>
+			<form className={styles.form} onSubmit={handleSubmit(sendData)}>
 				{emailError && <div className={styles.errorLabel}>{emailError}</div>}
 
 				<input
 					type="email"
 					name="email"
-					value={email}
 					placeholder="Введите вашу почту"
-					onChange={({ target }) => {
-						updateState('email', target.value);
-					}}
+					{...register('email')}
+					onBlur={() => trigger('email')}
 				/>
 				{passwordError && (
 					<div className={styles.errorLabel}>{passwordError}</div>
@@ -84,18 +58,9 @@ export const App = () => {
 				<input
 					type="password"
 					name="password"
-					value={password}
 					placeholder="Введите пароль"
-					onChange={({ target }) => {
-						updateState('password', target.value);
-					}}
-					onBlur={({ target }) => {
-						const newError = validateAndGetErrorMessage(
-							PasswordBluerSchema,
-							target.value,
-						);
-						setPasswordError(newError);
-					}}
+					{...register('password')}
+					onBlur={() => trigger('password')}
 				/>
 				{passcheckError && (
 					<div className={styles.errorLabel}>{passcheckError}</div>
@@ -103,11 +68,14 @@ export const App = () => {
 				<input
 					type="password"
 					name="passcheck"
-					value={passcheck}
 					placeholder="Повторите пароль"
-					onChange={({ target }) => updateState('passcheck', target.value)}
+					{...register('passcheck')}
+					onChange={(e) => {
+						register('passcheck').onChange(e);
+						trigger('passcheck');
+					}}
 				/>
-				<button type="submit" disabled={!isFormValid} ref={buttonRef}>
+				<button type="submit" disabled={!isValid} ref={buttonRef}>
 					Зарегестрироваться
 				</button>
 			</form>
